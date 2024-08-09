@@ -7,36 +7,35 @@ export async function POST(req: NextRequest) {
     try {
         const { title, description } = await req.json();
         const exited = await Post.findOne({ title });
-        if (!exited) {
-            const newPost = await Post.create({ title, description })
 
+        if (!exited) {
+            const newPost = await Post.create({ title, description });
             return NextResponse.json({
                 EC: 0,
+                EM: "Post Create succes",
                 data: newPost
-            }, { status: 202, statusText: "Created" });
-
-        } else {
-            return NextResponse.json({
-                EC: 1,
-                message: "Post already exists"
-            }, { status: 409, statusText: "Conflict" });
+            }, { status: 201, statusText: "Created" });
         }
 
-
+        if (exited) {
+            return NextResponse.json({
+                EC: 1,
+                EM: "Post already exists",
+                data: null
+            }, { status: 200, statusText: "Conflict" });
+        }
     } catch (error) {
-        // log ra lỗi
         console.error("Error creating post:", error);
-
-        // Return a failure response
         return NextResponse.json({
             EC: -1,
+            EM: "Failed to create post",
             data: null
-        }, { status: 400, statusText: "Falied" });
+        }, { status: 500, statusText: "Internal Server Error" });
     }
 }
 
 export async function GET(req: NextRequest) {
-    // await connectDB();
+    await connectDB();
     try {
         const limit = req.nextUrl.searchParams.get("limit") ?? 2;
         const page = req.nextUrl.searchParams.get("page") ?? 1;
@@ -53,7 +52,7 @@ export async function GET(req: NextRequest) {
                 totalPage: totalPages,
                 totalPosts: totalPosts
             }
-        }, { status: 200});
+        }, { status: 200 });
     } catch (error) {
         // log ra lỗi
         console.error("Error Get:", error);
